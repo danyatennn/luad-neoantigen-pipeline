@@ -1,92 +1,91 @@
 """
-Install requirements first:
-    pip install GEOparse pandas --break-system-packages
+Part 6 - Gene-Expression Dataset (Lung Cancer, GSE81089)
+
+Install requirements:
+    pip install pandas requests --break-system-packages
 
 Usage:
-    python 02_process_expression.py
+    python 02_process_expression_v2.py
 """
 
-import GEOparse
 import pandas as pd
 import numpy as np
+import requests
+import gzip
 import os
 
-GEO_ACCESSION = "GSE81089" # dataset number
-DESTDIR = "./geo_data" # where raw GEO files will be cached
+FPKM_URL = ("https://www.ncbi.nlm.nih.gov/geo/download/?acc=GSE81089"
+            "&format=file&file=GSE81089%5FFPKM%5Fcufflinks%2Etsv%2Egz")
+DESTDIR = "./geo_data"
+RAW_FILE = os.path.join(DESTDIR, "GSE81089_FPKM_cufflinks.tsv.gz")
 OUTPUT_FILE = "02_gene_by_sample_TPM.tsv"
 
-TUMOR_SAMPLES_ONLY = True
+TUMOR_SUFFIX = "T" # sample columns ending in this = tumor
+NORMAL_SUFFIX = "N" # sample columns ending in this = matched normal
+KEEP_ONLY_TUMOR = True  # deliverable matrix should be only tumor samples
+
+
+def download_file(url, path):
+    if os.path.exists(path):
+        print(f"Already downloaded: {path}")
+        return
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    print(f"Downloading {url} ...")
+    r = requests.get(url, stream=True)
+    r.raise_for_status()
+    with open(path, "wb") as f:
+        for chunk in r.iter_content(chunk_size=8192):
+            f.write(chunk)
+    print(f"Saved to {path}")
+
 
 def main():
-    os.makedirs(DESTDIR, exist_ok=True)
+    # 1. download FPKM matrix
+    download_file(FPKM_URL, RAW_FILE)
 
-    # 1. Download series (metadata + supplementary files) from GEO
-    print(f"Downloading {GEO_ACCESSION} from GEO ...")
-    gse = GEOparse.get_GEO(geo=GEO_ACCESSION, destdir=DESTDIR)
+    # 2. load matrix
+    with gzip.open(RAW_FILE, "rt") as f:
+        expr = pd.read_csv(f, sep="\t", index_col=0)
 
-    # 2. Inspect sample metadata to find the tumor/normal label. Print a sample's metadata to see what field marks tumor vs normal.
-    example_gsm = list(gse.gsms.values())[0]
-    print("\nExample sample metadata (use this to find the tumor/normal field):")
-    for key, val in example_gsm.metadata.items():
-        print(f"  {key}: {val}")
+    print(f"Loaded raw FPKM matrix: {expr.shape[0]} genes x {expr.shape[1]} samples")
+    print("First few columns:", list(expr.columns[:5]))
+    print("Index name (gene identifier column):", expr.index.name)
 
-    # Adjust the keyword ("tumor" / "normal") below if the actual wording differs once you've looked at the printout above.
-    sample_group = {}
-    for gsm_name, gsm in gse.gsms.items():
-        chars = " ".join(gsm.metadata.get("characteristics_ch1", [])).lower()
-        title = gsm.metadata.get("title", [""])[0].lower()
-        text = chars + " " + title
-        if "normal" in text or "adjacent" in text:
-            sample_group[gsm_name] = "normal"
+    # 3. Split tumor vs normal using the sample-name suffix convention
+    tumor_cols, normal_cols, unmatched = [], [], []
+    for col in expr.columns:
+        base = col.split("_")[0]  # strip suffixes like _2122, _1
+        if base.endswith(TUMOR_SUFFIX):
+            tumor_cols.append(col)
+        elif base.endswith(NORMAL_SUFFIX):
+            normal_cols.append(col)
         else:
-            sample_group[gsm_name] = "tumor"
+            unmatched.append(col)
 
-    n_tumor = sum(v == "tumor" for v in sample_group.values())
-    n_normal = sum(v == "normal" for v in sample_group.values())
-    print(f"\nDetected {n_tumor} tumor samples and {n_normal} normal samples.")
+    print(f"\nTumor samples: {len(tumor_cols)}")
+    print(f"Normal samples: {len(normal_cols)}")
+    if unmatched:
+        print(f"Unmatched columns (check manually): {unmatched}")
 
-    # 3. Build the raw expression matrix (genes x samples) from each GSM's table. 
-    if len(example_gsm.table) > 0:
-        print("\nUsing per-sample GSM tables...")
-        expr = gse.pivot_samples("VALUE")   # genes x samples, FPKM values
-    else:
-        print("\nNo per-sample tables found — check gse.gpls / gse.metadata")
-        print("for a supplementary series matrix / FPKM file and load it")
-        print("with pandas.read_csv() instead, e.g.:")
-        print('  expr = pd.read_csv("<downloaded_supp_file>", sep="\\t", index_col=0)')
-        raise SystemExit(
-            "Manual step needed: locate the supplementary FPKM file. "
-            "Check ./geo_data/ after this run, or the GEO page's "
-            "'Series Matrix File(s)' / 'Supplementary file' links."
-        )
+    working = expr[tumor_cols] if KEEP_ONLY_TUMOR else expr[tumor_cols + normal_cols]
 
-    print(f"Raw expression matrix: {expr.shape[0]} genes x {expr.shape[1]} samples")
-
-    # 4. Restrict to tumor samples (optional, see flag above)
-    if TUMOR_SAMPLES_ONLY:
-        tumor_cols = [s for s in expr.columns if sample_group.get(s) == "tumor"]
-        expr = expr[tumor_cols]
-        print(f"Restricted to {len(tumor_cols)} tumor samples")
-
-    # 5. Convert FPKM --> TPM 
+    # 4. Convert FPKM --> TPM (per-sample renormalization to sum to 1e6)
     print("\nConverting FPKM to TPM...")
-    tpm = expr.div(expr.sum(axis=0), axis=1) * 1e6
+    tpm = working.div(working.sum(axis=0), axis=1) * 1e6
 
-    # 6. Handle duplicated gene symbols: take the MEDIAN across probes/
-    #    rows mapping to the same gene symbol (report this choice in
-    #    your README, per Part 6 requirements)
-    tpm["GeneName"] = tpm.index  # assumes index is already gene symbol;
+    # 5. Handle duplicated gene symbols: collapse by MEDIAN across rows mapping to the same gene symbol
+    tpm.index.name = "GeneName"
     tpm = tpm.groupby("GeneName").median()
 
-    # 7. Basic QC printout (some of what Part 8 will ask for later)
+    # 6. QC printout 
+    n_zero_genes = (tpm.sum(axis=1) == 0).sum()
     missing_pct = tpm.isna().mean().mean() * 100
     print(f"\nFinal TPM matrix: {tpm.shape[0]} genes x {tpm.shape[1]} samples")
+    print(f"Genes with zero expression across all samples: {n_zero_genes}")
     print(f"Missing values: {missing_pct:.2f}%")
 
-    # 8. Write tab-delimited output
-    tpm.reset_index().rename(columns={"GeneName": "GeneName"}).to_csv(
-        OUTPUT_FILE, sep="\t", index=False
-    )
+    # 7. Write csv
+    tpm.reset_index().to_csv(OUTPUT_FILE, sep="\t", index=False)
     print(f"\nWrote {OUTPUT_FILE}")
 
 
