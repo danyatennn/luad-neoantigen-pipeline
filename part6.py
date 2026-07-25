@@ -3,9 +3,6 @@ Part 6 - Gene-Expression Dataset (Lung Cancer, GSE81089)
 
 Install requirements:
     pip install pandas requests --break-system-packages
-
-Usage:
-    python 02_process_expression_v2.py
 """
 
 import pandas as pd
