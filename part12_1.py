@@ -30,8 +30,7 @@ WEAK_BINDER_RANK = 2.0
 
 # A mutation/allele pair is flagged as a candidate neoantigen if the
 # mutant percentile rank is <= this AND the wild-type rank is not
-# already a strong binder itself (i.e. binding is newly gained/improved
-# because of the mutation, not just generally strong for that region)
+# already a strong binder itself 
 CANDIDATE_MUT_RANK_MAX = 2.0
 CANDIDATE_WT_RANK_MIN = 2.0
 
