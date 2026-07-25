@@ -13,6 +13,7 @@ import numpy as np
 import requests
 import gzip
 import os
+import matplotlib.pyplot as plt
 
 FPKM_URL = ("https://www.ncbi.nlm.nih.gov/geo/download/?acc=GSE81089"
             "&format=file&file=GSE81089%5FFPKM%5Fcufflinks%2Etsv%2Egz")
@@ -88,6 +89,25 @@ def main():
     tpm.reset_index().to_csv(OUTPUT_FILE, sep="\t", index=False)
     print(f"\nWrote {OUTPUT_FILE}")
 
+    # 8. Make histogram & calculate distribution of TPM vals
+    tpm_values = tpm.values.flatten()
+
+    median_tpm = pd.Series(tpm_values).median()
+    variance_tpm = pd.Series(tpm_values).var()
+    print(pd.Series(tpm_values).describe(percentiles=[0.5, 0.9, 0.95, 0.99]))
+    print("Median TPM:", median_tpm)
+    print("Variance of TPM:", variance_tpm)
+
+    # histogram
+    log_tpm_values = np.log2(tpm_values + 1)
+
+    plt.figure(figsize=(8, 5))
+    plt.hist(log_tpm_values, bins=100)
+    plt.xlabel("log2(TPM + 1)")
+    plt.ylabel("Frequency")
+    plt.title("Distribution of GeneLevelTPM values (log2 scale)")
+    plt.savefig("tpm_distribution_log.png", dpi=150)
+    plt.show()
 
 if __name__ == "__main__":
     main()
