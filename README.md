@@ -1,14 +1,22 @@
-## Project 130: Integrating Cancer Mutations, Gene Expression, and Neoantigen Prediction
+# Project 130: Integrating Cancer Mutations, Gene Expression, and Neoantigen Prediction
 Group Members: Naige Lu, Daniil Ten, Hae-gyung (Tessa) Han
+
 Selected cancer type: Lung cancer (LUAD)
-Dataset accession numbers:
-Download dates:
+
+Dataset accession numbers: 
+
+Download dates: 
+
 Reference genome assembly:
+
 Software dependencies:
-Software versions: Python XX, Linux XX
+- Python libraries: numpy, pandas, requests, matplotlib, gzip, os, re, mhcflurry, 
 
-# How to run the pipeline:
+Software versions: Python 3.11.5, Ubuntu 26.04 LTS
 
-# Output columns
+## How to run the pipeline:
 
-# Known limitations
+## Output columns
+i was kind of unclear on if this is like the final output columns or the columns for each part of the pipeline... - tessa
+
+## Known limitations
