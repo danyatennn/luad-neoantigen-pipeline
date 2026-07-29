@@ -31,7 +31,7 @@ Output (in --outdir):
                                   where the mutation appears to create new HLA-II
                                   presentation, sorted by strongest mutant rank
 
-Requires pandas (pip install pandas --break-system-packages if missing).
+Requires pandas (pip install pandas --break-system-packages).
 """
 
 import argparse
@@ -67,13 +67,6 @@ def run_netmhciipan(binary, pep_file, alleles, out_path):
 def parse_output(raw_path):
     """
     Parses netMHCIIpan 4.3 whitespace-delimited stdout into a list of dict rows.
-
-    NetMHCIIpan's data rows don't have a fixed field count: the trailing
-    BindLevel column ("<= WB" / "<= SB") is only present for binders, so
-    non-binder rows have 11 whitespace-split fields and binder rows have 13,
-    while the header always has 12. Matching field count against the header
-    (the old approach) silently drops every row. Instead we take the first
-    11 fields as the fixed columns and treat anything after that as BindLevel.
     """
     fixed_cols = ["Pos", "MHC", "Peptide", "Of", "Core", "Core_Rel",
                   "Inverted", "Identity", "Score_EL", "Rank_EL", "Exp_Bind"]
@@ -137,14 +130,14 @@ def main():
         pep_file = tmp.name
 
     raw_out = outdir / "netmhciipan_raw.txt"
-    print("Running NetMHCIIpan (this can take a while for large peptide sets)...")
+    print("Running NetMHCIIpan")
     run_netmhciipan(args.netmhciipan_bin, pep_file, args.alleles, raw_out)
     os.unlink(pep_file)
 
     rows = parse_output(raw_out)
     if not rows:
         sys.exit(f"No parseable prediction rows found in {raw_out}. "
-                  f"Open that file and check the header row / adjust parse_output().")
+                  f"Open that file and check the header row or adjust parse_output().")
 
     pred_df = pd.DataFrame(rows)
     print(f"Parsed {len(pred_df)} prediction rows from {raw_out}")
