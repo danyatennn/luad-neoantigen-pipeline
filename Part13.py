@@ -63,7 +63,7 @@ with open("mutant_9mers.fasta", "r") as fasta_file:
 #PRediciton of IMmunogenic Epitopes (PRIME2.1) was used.
 
 prime = pd.read_csv(
-    '/Users/naigelu/Desktop/Imperial College London/Year 2/STJU Summer Internship/Project 130/Lung Cancer/project130_lung_cancer/mutant_9mers_res (1).txt',
+    '/Users/naigelu/Desktop/Imperial College London/Year 2/STJU Summer Internship/Project 130/Lung Cancer/Part 13/prime_mutant_9mers.txt',
     sep=r"\s+",
     comment="#"
 )
@@ -113,15 +113,11 @@ combined["ImmunogenicityScore"] = combined.apply(
 
 def get_prime_raw_score(row):
     allele = row["PRIMEAllele"]
-
     if pd.isna(allele):
         return pd.NA
-
     column_name = f"Score_{allele}"
-
     if column_name not in row.index:
         return pd.NA
-
     return row[column_name]
 
 
@@ -157,7 +153,7 @@ print(part13.columns.tolist())
 
 
 part13.to_csv(
-    "/Users/naigelu/Desktop/Imperial College London/Year 2/STJU Summer Internship/Project 130/Lung Cancer/Part 13/part13_immunogenicity_results.tsv",
+    "/Users/naigelu/Desktop/Imperial College London/Year 2/STJU Summer Internship/Project 130/Lung Cancer/Part 13/part13_HLA1_immunogenicity_results.tsv",
     sep="\t",
     index=False,
     na_rep="NA"
