@@ -1,9 +1,9 @@
 import pandas as pd
 
-INPUT_FILE = "peptides_15mers.tsv"
+INPUT_FILE = "peptides_15mers.tsv" # full 15mer list
 OUTPUT_FILE = "peptides_15mers_filtered.tsv"
 
-# your top mutated genes from Part 8 -- edit this list to match your actual results
+# TO EDIT: top mutated genes from Part 8
 TOP_GENES = ["KRAS", "EGFR", "TP53", "BRAF"]
 
 df = pd.read_csv(INPUT_FILE, sep="\t")
