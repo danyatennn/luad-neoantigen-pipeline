@@ -1,7 +1,9 @@
 import pandas as pd
 
+import config
+
 # VEP web output: tab-separated, one row per variant
-vep = pd.read_csv("QgqZf4GgO7KDUMli.txt", sep="\t")
+vep = pd.read_csv(config.VEP_OUTPUT, sep="\t")
 
 # Enforce a single, consistent transcript-selection rule: MANE Select only.
 # Variants without a MANE Select transcript are dropped so the strategy stays uniform.
@@ -26,6 +28,6 @@ annot = pd.DataFrame({
     "Transcript_Selection_Rule": "MANE Select",
 })
 
-annot.to_csv("variant_protein_annotation.tsv", sep="\t", index=False)
-print(f"Saved {len(annot)} annotated missense variants to variant_protein_annotation.tsv")
+annot.to_csv(config.VARIANT_ANNOTATION, sep="\t", index=False)
+print(f"Saved {len(annot)} annotated missense variants to {config.VARIANT_ANNOTATION}")
 print(annot.head())

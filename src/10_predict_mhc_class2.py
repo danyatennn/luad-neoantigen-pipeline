@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-netmhciipan_pipeline.py
+Part 12.2 - Peptide-MHC Binding Prediction: Class II, 15-mers (NetMHCIIpan)
 
 Evaluate WildType/Mutant 15-mer peptide pairs (neoantigen candidate windows)
 for HLA class II presentation using a local NetMHCIIpan 4.2 installation.
@@ -13,20 +13,16 @@ MutPos) triple identifies one sliding-window pair: the same 15-mer window
 in wildtype vs mutant sequence.
 
 Usage:
-    python3 netmhciipan_pipeline.py \
-        --tsv 15mers_filtered.tsv \
-        --netmhciipan-bin /path/to/netMHCIIpan-4.2/netMHCIIpan \
-        --outdir results \
-        --strong-threshold 2.0 \
-        --weak-threshold 10.0
+    python3 src/10_predict_mhc_class2.py \
+        --netmhciipan-bin /path/to/netMHCIIpan-4.2/netMHCIIpan
 
-    Defaults to alleles DRB1_0101,DRB1_0701 (LUAD-relevant pair). Override
-    with --alleles if needed.
+    Input file and alleles default to the values in config.py; override with
+    --tsv / --alleles if needed.
 
-Output (in --outdir):
-    netmhciipan_raw.txt        - raw netMHCIIpan stdout
-    predictions_full.csv       - every input row x allele, with %Rank_EL + binding call
-    neoantigen_candidates.csv  - Mutant peptides that bind (Strong/Weak) where the
+Output (paths come from config.py, all under data/interim/):
+    netmhciipan_raw.txt              - raw netMHCIIpan stdout
+    15mer_preds.csv                  - every input row x allele, with %Rank_EL + binding call
+    classii_neoantigen_candidates.csv - Mutant peptides that bind (Strong/Weak) where the
                                   matched WildType peptide does not - i.e. peptides
                                   where the mutation appears to create new HLA-II
                                   presentation, sorted by strongest mutant rank
@@ -39,18 +35,19 @@ import subprocess
 import tempfile
 import os
 import sys
-from pathlib import Path
 
 import pandas as pd
+
+import config
 
 
 def parse_args():
     p = argparse.ArgumentParser(description="Run NetMHCIIpan 4.2 on WT/Mutant 15-mer peptide TSV")
-    p.add_argument("--tsv", required=True, help="Input TSV (GenomicVariant, GeneName, ..., Peptide, Type)")
-    p.add_argument("--alleles", default="DRB1_0101,DRB1_0701",
-                    help="Comma-separated allele list (default: DRB1_0101,DRB1_0701 - LUAD-relevant)")
+    p.add_argument("--tsv", default=config.PEPTIDES_15MER_FILTERED,
+                    help="Input TSV (GenomicVariant, GeneName, ..., Peptide, Type)")
+    p.add_argument("--alleles", default=",".join(config.HLA_CLASS_II),
+                    help="Comma-separated allele list (default: the Part 11 class II panel)")
     p.add_argument("--netmhciipan-bin", required=True, help="Path to the netMHCIIpan executable")
-    p.add_argument("--outdir", default="results", help="Where to write raw + parsed output")
     p.add_argument("--strong-threshold", type=float, default=2.0, help="%%Rank_EL cutoff for 'Strong' binder")
     p.add_argument("--weak-threshold", type=float, default=10.0, help="%%Rank_EL cutoff for 'Weak' binder")
     return p.parse_args()
@@ -107,8 +104,6 @@ def classify(rank, strong_cut, weak_cut):
 
 def main():
     args = parse_args()
-    outdir = Path(args.outdir)
-    outdir.mkdir(parents=True, exist_ok=True)
 
     df = pd.read_csv(args.tsv, sep="\t")
     required_cols = {"GenomicVariant", "GeneName", "ProteinChange", "ProteinPosition", "MutPos", "Peptide", "Type"}
@@ -129,7 +124,7 @@ def main():
         tmp.write("\n".join(unique_peptides) + "\n")
         pep_file = tmp.name
 
-    raw_out = outdir / "netmhciipan_raw.txt"
+    raw_out = config.CLASS2_RAW
     print("Running NetMHCIIpan")
     run_netmhciipan(args.netmhciipan_bin, pep_file, args.alleles, raw_out)
     os.unlink(pep_file)
@@ -148,7 +143,7 @@ def main():
 
     # merge predictions (one row per peptide x allele) onto every metadata row
     full = df.merge(pred_df, on="Peptide", how="left")
-    full_csv = outdir / "predictions_full.csv"
+    full_csv = config.CLASS2_PREDICTIONS
     full.to_csv(full_csv, index=False)
 
     # pair WildType vs Mutant within the same mutation window, per allele
@@ -164,7 +159,7 @@ def main():
 
     paired["Neoepitope_Candidate"] = paired.apply(is_candidate, axis=1)
     candidates = paired[paired["Neoepitope_Candidate"]].sort_values("Mut_Rank_EL")
-    cand_csv = outdir / "neoantigen_candidates.csv"
+    cand_csv = config.CLASS2_CANDIDATES
     candidates.to_csv(cand_csv, index=False)
 
     print(f"Raw output:            {raw_out}")

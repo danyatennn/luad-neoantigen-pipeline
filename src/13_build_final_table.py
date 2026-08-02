@@ -2,10 +2,12 @@
 
 import pandas as pd
 
-HLA1_immunogenicity = pd.read_csv('/Users/naigelu/Desktop/Imperial College London/Year 2/STJU Summer Internship/Project 130/Lung Cancer/Part 13/part13_HLA1_immunogenicity_results.tsv', sep='\t')
-ninemers_presentation = pd.read_csv('/Users/naigelu/Desktop/Imperial College London/Year 2/STJU Summer Internship/Project 130/Lung Cancer/Google Drive Downloads/Part 11 + 12.1/classI_neoantigen_candidates.tsv', sep='\t')
-fifteenmers_presentation = pd.read_csv('/Users/naigelu/Desktop/Imperial College London/Year 2/STJU Summer Internship/Project 130/Lung Cancer/Google Drive Downloads/Part 11 + 12.1/classii_neoantigen_candidates.csv', sep=',')
-genelevelTPM = pd.read_csv('/Users/naigelu/Desktop/Imperial College London/Year 2/STJU Summer Internship/Project 130/Lung Cancer/Google Drive Downloads/integrated_mutation_expression_matrix.tsv', sep='\t')
+import config
+
+HLA1_immunogenicity = pd.read_csv(config.IMMUNOGENICITY, sep='\t')
+ninemers_presentation = pd.read_csv(config.CLASS1_CANDIDATES, sep='\t')
+fifteenmers_presentation = pd.read_csv(config.CLASS2_CANDIDATES, sep=',')
+genelevelTPM = pd.read_csv(config.INTEGRATED_MATRIX, sep='\t')
 
 #in order to find the mutation frequency, as well as
 sample_columns = [
@@ -159,7 +161,7 @@ print("final_table columns:")
 print(final_table.columns.tolist())
 
 final_table.to_csv(
-    '/Users/naigelu/Desktop/Imperial College London/Year 2/STJU Summer Internship/Project 130/Lung Cancer/Part 15/final_neoantigen_table.tsv',
+    config.NEOANTIGEN_TABLE,
     sep="\t",
     index=False,
     na_rep="NA"

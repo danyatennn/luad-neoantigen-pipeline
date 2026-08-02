@@ -2,6 +2,8 @@ import gzip
 import re
 import pandas as pd
 
+import config
+
 # 3-letter -> 1-letter amino acid codes.
 AA3 = {
     "Ala":"A","Arg":"R","Asn":"N","Asp":"D","Cys":"C","Gln":"Q","Glu":"E",
@@ -12,7 +14,7 @@ AA3 = {
 # Load Ensembl human proteome (release 116, matches VEP cache).
 # Index by unversioned ENSP (e.g. ENSP00000493376).
 proteins = {}
-with gzip.open("Homo_sapiens.GRCh38.pep.all.fa.gz", "rt") as fh:
+with gzip.open(config.PROTEOME, "rt") as fh:
     pid, seq = None, []
     for line in fh:
         if line.startswith(">"):
@@ -25,7 +27,7 @@ with gzip.open("Homo_sapiens.GRCh38.pep.all.fa.gz", "rt") as fh:
     if pid:
         proteins[pid] = "".join(seq)
 
-variants = pd.read_csv("variant_protein_annotation.tsv", sep="\t")
+variants = pd.read_csv(config.VARIANT_ANNOTATION, sep="\t")
 
 # Parse "ENSPxxxxx.N:p.Ile239Met" -> (ref_aa, pos, alt_aa).
 change_re = re.compile(r"p\.([A-Z][a-z]{2})(\d+)([A-Z][a-z]{2})")
@@ -73,7 +75,7 @@ peptides = pd.DataFrame(rows, columns=[
     "GenomicVariant", "GeneName", "TranscriptID", "ProteinID",
     "ProteinChange", "ProteinPosition", "Length", "MutPos", "Peptide", "Type",
 ])
-peptides.to_csv("mutant_peptides.tsv", sep="\t", index=False)
+peptides.to_csv(config.PEPTIDES, sep="\t", index=False)
 
 print(f"Variants processed: {len(variants)}")
 print(f"  skipped (unparseable HGVSp):    {skipped_bad_hgvsp}")

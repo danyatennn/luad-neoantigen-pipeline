@@ -16,13 +16,13 @@ from mhcflurry import Class1AffinityPredictor
 import mhcflurry
 from tqdm import tqdm
 
-PEPTIDE_FILE = r"C:\Users\lyssa\Downloads\mutant_peptides.tsv" # Part 10 output filepath
-OUTPUT_FILE = "9mer_predictions.tsv"
-NEOANTIGEN_CANDIDATES_FILE = "classI_neoantigen_candidates.tsv"
+import config
 
-HLA_CLASS_I = [
-    "HLA-A*02:01", "HLA-A*01:01", "HLA-A*03:01",
-]
+PEPTIDE_FILE = config.PEPTIDES  # Part 10 output
+OUTPUT_FILE = config.CLASS1_PREDICTIONS
+NEOANTIGEN_CANDIDATES_FILE = config.CLASS1_CANDIDATES
+
+HLA_CLASS_I = config.HLA_CLASS_I  # Part 11 panel
 
 # Percentile-rank thresholds for binder classification
 STRONG_BINDER_RANK = 0.5

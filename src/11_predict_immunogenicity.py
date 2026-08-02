@@ -2,8 +2,10 @@
 
 import pandas as pd
 
-file_1 = pd.read_csv('/Users/naigelu/Desktop/Imperial College London/Year 2/STJU Summer Internship/Project 130/Lung Cancer/Google Drive Downloads/Part 11 + 12.1/9mer_predictions.tsv', sep="\t")
-file_2 = pd.read_csv('/Users/naigelu/Desktop/Imperial College London/Year 2/STJU Summer Internship/Project 130/Lung Cancer/Google Drive Downloads/Part 11 + 12.1/classI_neoantigen_candidates.tsv', sep="\t")
+import config
+
+file_1 = pd.read_csv(config.CLASS1_PREDICTIONS, sep="\t")
+file_2 = pd.read_csv(config.CLASS1_CANDIDATES, sep="\t")
 
 mutant_9mers = file_2[
     [
@@ -34,7 +36,7 @@ mutant_9mers = mutant_9mers.drop_duplicates(
 #print("Number of unique mutant 9-mers:", len(mutant_9mers))
 
 
-with open("mutant_9mers.fasta", "w") as fasta_file:
+with open(config.MUTANT_9MERS_FASTA, "w") as fasta_file:
     for index, peptide in enumerate(
         mutant_9mers["Peptide_Mutant"],
         start=1
@@ -42,9 +44,9 @@ with open("mutant_9mers.fasta", "w") as fasta_file:
         fasta_file.write(f">mutant_9mer_{index}\n")
         fasta_file.write(f"{peptide}\n")
 
-print("FASTA file created: mutant_9mers.fasta")
+print(f"FASTA file created: {config.MUTANT_9MERS_FASTA}")
 
-with open("mutant_9mers.fasta", "r") as fasta_file:
+with open(config.MUTANT_9MERS_FASTA, "r") as fasta_file:
     for _ in range(10):
         line = fasta_file.readline()
 
@@ -63,7 +65,7 @@ with open("mutant_9mers.fasta", "r") as fasta_file:
 #PRediciton of IMmunogenic Epitopes (PRIME2.1) was used.
 
 prime = pd.read_csv(
-    '/Users/naigelu/Desktop/Imperial College London/Year 2/STJU Summer Internship/Project 130/Lung Cancer/Part 13/prime_mutant_9mers.txt',
+    config.PRIME_OUTPUT,
     sep=r"\s+",
     comment="#"
 )
@@ -153,7 +155,7 @@ print(part13.columns.tolist())
 
 
 part13.to_csv(
-    "/Users/naigelu/Desktop/Imperial College London/Year 2/STJU Summer Internship/Project 130/Lung Cancer/Part 13/part13_HLA1_immunogenicity_results.tsv",
+    config.IMMUNOGENICITY,
     sep="\t",
     index=False,
     na_rep="NA"

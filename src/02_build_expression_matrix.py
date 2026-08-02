@@ -12,11 +12,11 @@ import gzip
 import os
 import matplotlib.pyplot as plt
 
-FPKM_URL = ("https://www.ncbi.nlm.nih.gov/geo/download/?acc=GSE81089"
-            "&format=file&file=GSE81089%5FFPKM%5Fcufflinks%2Etsv%2Egz")
-DESTDIR = "./geo_data"
-RAW_FILE = os.path.join(DESTDIR, "GSE81089_FPKM_cufflinks.tsv.gz")
-OUTPUT_FILE = "02_gene_by_sample_TPM.tsv"
+import config
+
+FPKM_URL = config.GEO_FPKM_URL
+RAW_FILE = config.GEO_FPKM
+OUTPUT_FILE = config.TPM_MATRIX
 
 TUMOR_SUFFIX = "T" # sample columns ending in this = tumor
 NORMAL_SUFFIX = "N" # sample columns ending in this = matched normal
@@ -103,7 +103,7 @@ def main():
     plt.xlabel("log2(TPM + 1)")
     plt.ylabel("Frequency")
     plt.title("Distribution of GeneLevelTPM values (log2 scale)")
-    plt.savefig("tpm_distribution_log.png", dpi=150)
+    plt.savefig(config.FIG_TPM_HISTOGRAM, dpi=150)
     plt.show()
 
 if __name__ == "__main__":

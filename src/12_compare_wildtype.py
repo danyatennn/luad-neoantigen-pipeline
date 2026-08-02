@@ -2,10 +2,12 @@
 
 import pandas as pd
 
-class_1 = pd.read_csv('/Users/naigelu/Desktop/Imperial College London/Year 2/STJU Summer Internship/Project 130/Lung Cancer/Google Drive Downloads/Part 11 + 12.1/classI_neoantigen_candidates.tsv', sep="\t")
-class_2 = pd.read_csv('/Users/naigelu/Desktop/Imperial College London/Year 2/STJU Summer Internship/Project 130/Lung Cancer/Google Drive Downloads/Part 11 + 12.1/classii_neoantigen_candidates.csv', sep=",")
-mutation_by_sample_matrix = pd.read_csv('/Users/naigelu/Desktop/Imperial College London/Year 2/STJU Summer Internship/Project 130/Lung Cancer/Google Drive Downloads/integrated_mutation_expression_matrix.tsv', sep="\t")
-immunogenicity_class_1 = pd.read_csv('/Users/naigelu/Desktop/Imperial College London/Year 2/STJU Summer Internship/Project 130/Lung Cancer/Part 13/part13_immunogenicity_results.tsv', sep="\t")
+import config
+
+class_1 = pd.read_csv(config.CLASS1_CANDIDATES, sep="\t")
+class_2 = pd.read_csv(config.CLASS2_CANDIDATES, sep=",")
+mutation_by_sample_matrix = pd.read_csv(config.INTEGRATED_MATRIX, sep="\t")
+immunogenicity_class_1 = pd.read_csv(config.IMMUNOGENICITY, sep="\t")
 
 
 #equation 1: DeltaAffinity =WildTypeAffinity- MutantAffinity
@@ -136,7 +138,7 @@ HLA_1["PrioritisationScore"] = (
 print(HLA_1.head())
 print("HLA_1 columns:", HLA_1.columns.tolist())
 HLA_1.to_csv(
-    "/Users/naigelu/Desktop/Imperial College London/Year 2/STJU Summer Internship/Project 130/Lung Cancer/All_Combined_tables_HLA_1.tsv",
+    config.WT_VS_MUTANT,
     sep="\t",
     index=False,
     na_rep="NA"
@@ -153,7 +155,7 @@ candidates_score_6 = HLA_1[
 candidates_score_6 = candidates_score_6.drop_duplicates().copy()
 
 candidates_score_6.to_csv(
-    "/Users/naigelu/Desktop/Imperial College London/Year 2/STJU Summer Internship/Project 130/Lung Cancer/Part 14/candidates_prioritisation_score_6.tsv",
+    config.CANDIDATES_SCORE_6,
     sep="\t",
     index=False,
     na_rep="NA"
