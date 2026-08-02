@@ -11,8 +11,9 @@ Reference genome assembly:
 
 Software dependencies:
 - Python libraries: numpy, pandas, requests, matplotlib, gzip, os, re, mhcflurry, argparse, subprocess, tempfile, sys, pathlib
+- Ensembl Variant Effect Predictor (Ensembl VEP) release 116: WRITE WHAT IT DOES
 - NetMHCIIpan 4.2: This is an HLA class II predictor which can be obtained for free for academic purposes which we used for part 12.2. 
-- PRedictor of IMmunogenic Epitopes (PRIME) Vers. 2.1: This is a class I immunogenicity predictor used for part 13. 
+- PRedictor of IMmunogenic Epitopes (PRIME) Vers. 2.1: This is a class I immunogenicity predictor used for part 13.
 
 Software versions: Python 3.11.5, Ubuntu 26.04 LTS
 
