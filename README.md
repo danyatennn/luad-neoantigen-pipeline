@@ -6,9 +6,13 @@ Selected cancer type: Lung Adenocarcinoma (LUAD)
 Resources: 
 
 GDC Project ID: TCGA-LUAD
+
 Project name: Lung Adenocarcinoma
+
 Program: The Cancer Genome Atlas (TCGA)
+
 Access date: Monday, 20 July 2026 at 11:17
+
 Filters: 
 	Data category – simplified nucleotide variation
 	Data Type – Masked Somatic Mutations
