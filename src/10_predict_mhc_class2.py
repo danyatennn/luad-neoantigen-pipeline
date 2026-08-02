@@ -21,8 +21,8 @@ Usage:
 
 Output (paths come from config.py, all under data/interim/):
     netmhciipan_raw.txt              - raw netMHCIIpan stdout
-    15mer_preds.csv                  - every input row x allele, with %Rank_EL + binding call
-    classii_neoantigen_candidates.csv - Mutant peptides that bind (Strong/Weak) where the
+    15mer_preds.tsv                  - every input row x allele, with %Rank_EL + binding call
+    classii_neoantigen_candidates.tsv - Mutant peptides that bind (Strong/Weak) where the
                                   matched WildType peptide does not - i.e. peptides
                                   where the mutation appears to create new HLA-II
                                   presentation, sorted by strongest mutant rank
@@ -137,6 +137,10 @@ def main():
     pred_df = pd.DataFrame(rows)
     print(f"Parsed {len(pred_df)} prediction rows from {raw_out}")
 
+    # parse_output() returns every field as text. Rank_EL has to be converted
+    # before it is used as a number: sorted as text, "10.5" comes before "2.3".
+    pred_df["Rank_EL"] = pd.to_numeric(pred_df["Rank_EL"], errors="coerce")
+
     pred_df["Binding_Call"] = pred_df["Rank_EL"].apply(lambda r: classify(r, args.strong_threshold, args.weak_threshold))
     pred_df = pred_df.rename(columns={"MHC": "Allele"})
     pred_df = pred_df[["Peptide", "Allele", "Rank_EL", "Binding_Call"]]
@@ -144,7 +148,7 @@ def main():
     # merge predictions (one row per peptide x allele) onto every metadata row
     full = df.merge(pred_df, on="Peptide", how="left")
     full_csv = config.CLASS2_PREDICTIONS
-    full.to_csv(full_csv, index=False)
+    full.to_csv(full_csv, sep="\t", index=False)
 
     # pair WildType vs Mutant within the same mutation window, per allele
     key_cols = ["GenomicVariant", "GeneName", "ProteinChange", "ProteinPosition", "MutPos", "Allele"]
@@ -160,7 +164,7 @@ def main():
     paired["Neoepitope_Candidate"] = paired.apply(is_candidate, axis=1)
     candidates = paired[paired["Neoepitope_Candidate"]].sort_values("Mut_Rank_EL")
     cand_csv = config.CLASS2_CANDIDATES
-    candidates.to_csv(cand_csv, index=False)
+    candidates.to_csv(cand_csv, sep="\t", index=False)
 
     print(f"Raw output:            {raw_out}")
     print(f"Full predictions:      {full_csv}")

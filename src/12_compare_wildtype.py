@@ -8,9 +8,8 @@ import pandas as pd
 
 import config
 
-# TODO: change read_csv to read_tsv
 class_1 = pd.read_csv(config.CLASS1_CANDIDATES, sep="\t")
-class_2 = pd.read_csv(config.CLASS2_CANDIDATES, sep=",")
+class_2 = pd.read_csv(config.CLASS2_CANDIDATES, sep="\t")
 mutation_by_sample_matrix = pd.read_csv(config.INTEGRATED_MATRIX, sep="\t")
 immunogenicity_class_1 = pd.read_csv(config.IMMUNOGENICITY, sep="\t")
 
@@ -61,8 +60,9 @@ print("Class 2 columns:", class_2.columns.tolist())
     # Strong mutant peptide–HLA binding: High Mutant binding affinity
     # Better mutant binding than wild-type binding: We want a positive DeltaAffinity
     # Favourable immunogenicity score: we want %Rank to be ≤ 0.5
-    # Expression of the mutated gene: GeneLevelTPM > 0
-    # Occurrence in one or more tumour samples: Mutation count more than 1 tumour
+    # Expression of the mutated gene: GeneLevelTPM >= 15 (moderately expressed; the
+    #   threshold is a project choice and is stated in the README)
+    # Occurrence in one or more tumour samples: TumourCount >= 1
     # Low or absent presentation predicted for the wild-type peptide: WT binding %Rank > 2, meaning that WT is not a predicted binder.
 
 #For Class 1 HLA
@@ -79,14 +79,14 @@ mutation_by_sample_matrix["TumourCount"] = (
     .sum(axis=1)
 )
 
+# The immunogenicity table is deduplicated first: the same peptide/allele appears twice
+# when one protein change is reachable from two nucleotide changes, and PRIME scores it
+# identically both times. Without this the join adds 264 spurious rows.
+IMMUNO_KEY = ["GeneName", "ProteinChange", "Peptide_Mutant", "Allele"]
+
 first_merge = class_1.merge(
-    immunogenicity_class_1,
-    on=[
-        "GeneName",
-        "ProteinChange",
-        "Peptide_Mutant",
-        "Allele"
-    ],
+    immunogenicity_class_1.drop_duplicates(subset=IMMUNO_KEY),
+    on=IMMUNO_KEY,
     how="left"
 )
 
@@ -114,35 +114,35 @@ print("HLA_1 columns:", HLA_1.columns.tolist())
 HLA_1["PrioritisationScore"] = (
    # 1 point: strong mutant binding rank
    (pd.to_numeric(
-       HLA_1["Percentile_Rank_Mutant"],
+       HLA_1["Percentile_Rank_Mutant"], errors="coerce"
    ) <= 0.5).astype(int)
    +
 
    # 1 point: mutant affinity is at least 2-fold better than WT
    (pd.to_numeric(
-       HLA_1["AffinityFoldChange"],
+       HLA_1["AffinityFoldChange"], errors="coerce"
    ) >= 2).astype(int)
    +
 
    # 1 point: favourable PRIME immunogenicity rank
    (pd.to_numeric(
-       HLA_1["ImmunogenicityScore"],
+       HLA_1["ImmunogenicityScore"], errors="coerce"
    ) <= 0.5).astype(int)
    +
 
    # 1 point: mutated gene is expressed
    (pd.to_numeric(
-       HLA_1["GeneLevelTPM"],
+       HLA_1["GeneLevelTPM"], errors="coerce"
    ) >= 15).astype(int)
    +
 
    # 1 point: wild-type peptide has low predicted presentation
    (pd.to_numeric(
-       HLA_1["Percentile_Rank_WildType"],
+       HLA_1["Percentile_Rank_WildType"], errors="coerce"
    ) > 2)
    +
    (pd.to_numeric(
-       HLA_1["TumourCount"],
+       HLA_1["TumourCount"], errors="coerce"
    ) >= 1)
 )
 

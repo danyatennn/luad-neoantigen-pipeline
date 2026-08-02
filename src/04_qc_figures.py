@@ -34,10 +34,10 @@ plt.xlabel("Tumour samples")
 plt.ylabel("Mutation")
 plt.title("Thirty Most Frequent LUAD Mutations")
 plt.tight_layout()
+# savefig must come before show(): show() clears the current figure, so saving
+# afterwards writes an empty canvas.
+plt.savefig(config.FIG_MUTATION_HEATMAP, dpi=150)
 plt.show()
-
-# FIXME suggestions.md 3.4: show() above clears the figure, so this writes a blank PNG
-plt.savefig(config.FIG_MUTATION_HEATMAP)
 
 
 gene_by_sample = (
@@ -66,7 +66,8 @@ plt.xlabel("Number of tumour samples")
 plt.ylabel("Gene")
 plt.title("Ten Most Frequently Mutated Genes in TCGA-LUAD")
 plt.tight_layout()
-plt.show()  # FIXME suggestions.md 3.4: this figure is never written to disk
+plt.savefig(config.FIG_TOP_MUTATED_GENES, dpi=150)
+plt.show()
 
 
 # Mutation frequency vs gene expression

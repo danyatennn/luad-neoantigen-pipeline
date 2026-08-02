@@ -48,8 +48,8 @@ CLASS1_PREDICTIONS = INTERIM / "9mer_predictions.tsv"
 CLASS1_CANDIDATES = INTERIM / "classI_neoantigen_candidates.tsv"
 
 CLASS2_RAW = INTERIM / "netmhciipan_raw.txt"
-CLASS2_PREDICTIONS = INTERIM / "15mer_preds.csv"
-CLASS2_CANDIDATES = INTERIM / "classii_neoantigen_candidates.csv"
+CLASS2_PREDICTIONS = INTERIM / "15mer_preds.tsv"
+CLASS2_CANDIDATES = INTERIM / "classii_neoantigen_candidates.tsv"
 
 MUTANT_9MERS_FASTA = INTERIM / "mutant_9mers.fasta"
 PRIME_OUTPUT = INTERIM / "prime_mutant_9mers.txt"  # produced by running PRIME

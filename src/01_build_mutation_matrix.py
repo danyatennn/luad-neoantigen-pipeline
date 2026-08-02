@@ -34,6 +34,12 @@ mask = (
 )
 muts = maf.loc[mask].copy()
 print("number of rows after filtering:", len(muts))
+print("number of aliquot barcodes:", muts["Tumor_Sample_Barcode"].nunique())
+
+# A TCGA barcode identifies an aliquot (one extraction), not a tumour: the same
+# tumour can be sequenced on several plates and appear under several barcodes.
+# The first 16 characters identify the sample, so truncate before counting.
+muts["Tumor_Sample_Barcode"] = muts["Tumor_Sample_Barcode"].str[:16]
 print("number of unique samples:", muts["Tumor_Sample_Barcode"].nunique())
 
 # each unique mutation = (gene, HGVSc, HGVSp). Different mutations in one gene — different rows.
