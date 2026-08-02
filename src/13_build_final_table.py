@@ -40,7 +40,7 @@ genelevelTPM["MutationFrequency"] = (
 
 class1_9mers = HLA1_immunogenicity.merge(
     ninemers_presentation,
-    on="GeneName",
+    on=["GeneName", "ProteinChange", "Peptide_Mutant", "Allele"],
     how="left"
 )
 
@@ -122,7 +122,6 @@ final_15mers = pd.DataFrame({
     "MutationPosition": fifteenmers_presentation["MutPos"],
     "HLAAllele": fifteenmers_presentation["Allele"],
 
-    # Your class II output appears to contain ranks, not IC50 values
     "BindingAffinity": pd.NA,
     "BindingRank": fifteenmers_presentation["Mut_Rank_EL"],
 
@@ -137,22 +136,25 @@ final_table = pd.concat(
 
 ##GeneLevelTPMs and MutationFrequency need to be added last since they have both the 9 and 15 mers mixed together based on the gene name.
 ##please check this when you come back, it still needs some work
-expression_lookup = genelevelTPM[
-    [
-        "Gene_Name",
-        "GeneLevelTPM",
-        "MutationFrequency"
-    ]
-].rename(
-    columns={"Gene_Name": "GeneName"}
+#TODO: whoever wrote this is this still true or
+
+genelevelTPM = genelevelTPM.rename(
+    columns={"Gene_Name": "GeneName", "AminoAcid_Change": "ProteinChange"}
 )
 
-final_table = final_table.merge(
-    expression_lookup,
-    on="GeneName",
-    how="left"
+# GeneLevelTPM is one value per gene -> dedupe on GeneName 
+tpm_lookup = (
+    genelevelTPM[["GeneName", "GeneLevelTPM"]]
+    .drop_duplicates(subset=["GeneName"])
 )
 
+freq_lookup = (
+    genelevelTPM[["GeneName", "ProteinChange", "MutationFrequency"]]
+    .drop_duplicates(subset=["GeneName", "ProteinChange"])
+)
+
+final_table = final_table.merge(tpm_lookup, on="GeneName", how="left")
+final_table = final_table.merge(freq_lookup, on=["GeneName", "ProteinChange"], how="left")
 final_table = final_table[final_columns]
 print("Final table shape:", final_table.shape)
 print(final_table.head(10).to_string(index=False))

@@ -1,9 +1,14 @@
-#Part 14
+"""
+Part 14 - Comparison with Wild-Type Peptide: 
+
+"""
+# Part 14
 
 import pandas as pd
 
 import config
 
+# TODO: change read_csv to read_tsv
 class_1 = pd.read_csv(config.CLASS1_CANDIDATES, sep="\t")
 class_2 = pd.read_csv(config.CLASS2_CANDIDATES, sep=",")
 mutation_by_sample_matrix = pd.read_csv(config.INTEGRATED_MATRIX, sep="\t")
@@ -26,7 +31,9 @@ class_1["AffinityFoldChange"] = (
     / class_1["Affinity_nM_Mutant"]
 )
 
-#for class 2, since the classii_neoantigen_candidates.csv file table did not contain the necessary columns to calculate delta affinity of affinity fold change, delta Rank EL was used instead
+# for class 2, since the classii_neoantigen_candidates.csv file table did not contain the 
+# necessary columns to calculate delta affinity of affinity fold change,
+# delta Rank EL was used instead
 #deltaRank EL equation: WildType_Rank_EL - Mut_Rank_EL
     #A positive value means that the mutant has a lower, better presentation rank
 #Rank fold change can also be calculated
@@ -84,18 +91,22 @@ first_merge = class_1.merge(
 )
 
 mutation_by_sample_matrix = mutation_by_sample_matrix.rename(
-    columns={"Gene_Name": "GeneName"}
+    columns={"Gene_Name": "GeneName", "AminoAcid_Change": "ProteinChange"}
 )
 
-tpm_lookup = mutation_by_sample_matrix[
-    ["GeneName", "GeneLevelTPM", "TumourCount"]
-].copy()
-
-HLA_1 = first_merge.merge(
-    tpm_lookup,
-    on="GeneName",
-    how="left",
+# GeneLevelTPM is one value per gene --> dedupe on GeneName before joining
+tpm_lookup = (
+    mutation_by_sample_matrix[["GeneName", "GeneLevelTPM"]]
+    .drop_duplicates(subset=["GeneName"])
 )
+
+tumour_count_lookup = (
+    mutation_by_sample_matrix[["GeneName", "ProteinChange", "TumourCount"]]
+    .drop_duplicates(subset=["GeneName", "ProteinChange"])
+)
+
+HLA_1 = first_merge.merge(tpm_lookup, on="GeneName", how="left")
+HLA_1 = HLA_1.merge(tumour_count_lookup, on=["GeneName", "ProteinChange"], how="left")
 
 print(HLA_1.head())
 print("HLA_1 columns:", HLA_1.columns.tolist())
