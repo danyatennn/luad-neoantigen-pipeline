@@ -1,9 +1,5 @@
 """
-Part 7 - Integration of mutations and gene expression.
-
-Converted from task7.ipynb (the original notebook is kept in bin/).
-Adds GeneLevelTPM (median TPM across tumour samples) to every mutation row and
-writes data/03_integrated_mutation_expression.tsv.
+Integration of mutations and gene expression.
 """
 
 import pandas as pd

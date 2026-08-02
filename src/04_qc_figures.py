@@ -1,26 +1,17 @@
 """
-Part 8 - Basic data quality control figures.
-
-Brings together the QC plots that used to live in task5.ipynb (mutation heatmap,
-most frequently mutated genes) and plot.py (mutation frequency vs expression).
-The GeneLevelTPM histogram is produced by 02_build_expression_matrix.py.
-
-NOTE: the show()/savefig() ordering below is kept exactly as it was in the
-notebook - see suggestions.md item 3.4. Known open issue, deliberately not fixed here.
+Basic data quality control figures
 """
 
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-
 import config
 
 
-# --- 1. Mutation heatmap and most frequently mutated genes -------------------
+# Mutation heatmap and most frequently mutated genes
 result = pd.read_csv(config.MUTATION_MATRIX, sep="\t")
 sample_columns = result.columns[3:]
 
-# small check: top-10 most frequent mutations in the cohort
 print("Top 10 most frequent mutations:")
 print(
     result.assign(freq=result[sample_columns].sum(axis=1))
@@ -48,9 +39,7 @@ plt.show()
 # FIXME suggestions.md 3.4: show() above clears the figure, so this writes a blank PNG
 plt.savefig(config.FIG_MUTATION_HEATMAP)
 
-# Collapse separate mutation rows into one row per gene.
-# max() means that if any mutation in a gene is present in a sample,
-# that gene is counted as mutated once in that sample.
+
 gene_by_sample = (
     result
     .groupby("Gene_Name")[sample_columns]
@@ -80,7 +69,7 @@ plt.tight_layout()
 plt.show()  # FIXME suggestions.md 3.4: this figure is never written to disk
 
 
-# --- 2. Mutation frequency vs gene expression -------------------------------
+# Mutation frequency vs gene expression
 df = pd.read_csv(config.INTEGRATED_MATRIX, sep="\t")
 sample_cols = df.columns[4:]
 gene_any_mut = df.groupby("Gene_Name")[sample_cols].max()

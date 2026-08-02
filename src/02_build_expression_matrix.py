@@ -1,8 +1,5 @@
 """
-Part 6 - Gene-Expression Dataset (Lung Cancer, GSE81089)
-
-Install requirements:
-    pip install pandas requests --break-system-packages
+Gene-Expression Dataset (Lung Cancer, GSE81089)
 """
 
 import pandas as pd
@@ -11,7 +8,6 @@ import requests
 import gzip
 import os
 import matplotlib.pyplot as plt
-
 import config
 
 FPKM_URL = config.GEO_FPKM_URL
@@ -38,10 +34,10 @@ def download_file(url, path):
 
 
 def main():
-    # 1. download FPKM matrix
+    # download FPKM matrix
     download_file(FPKM_URL, RAW_FILE)
 
-    # 2. load matrix
+    # load matrix
     with gzip.open(RAW_FILE, "rt") as f:
         expr = pd.read_csv(f, sep="\t", index_col=0)
 
@@ -49,7 +45,7 @@ def main():
     print("First few columns:", list(expr.columns[:5]))
     print("Index name (gene identifier column):", expr.index.name)
 
-    # 3. Split tumor vs normal using the sample-name suffix convention
+    # Split tumor vs normal using the sample-name suffix convention
     tumor_cols, normal_cols, unmatched = [], [], []
     for col in expr.columns:
         base = col.split("_")[0]  # strip suffixes like _2122, _1
@@ -67,26 +63,26 @@ def main():
 
     working = expr[tumor_cols] if KEEP_ONLY_TUMOR else expr[tumor_cols + normal_cols]
 
-    # 4. Convert FPKM --> TPM (per-sample renormalization to sum to 1e6)
+    # Convert FPKM --> TPM
     print("\nConverting FPKM to TPM...")
     tpm = working.div(working.sum(axis=0), axis=1) * 1e6
 
-    # 5. Handle duplicated gene symbols: collapse by MEDIAN across rows mapping to the same gene symbol
+    # Handle duplicated gene symbols: collapse by MEDIAN across rows mapping to the same gene symbol
     tpm.index.name = "GeneName"
     tpm = tpm.groupby("GeneName").median()
 
-    # 6. QC printout 
+    # QC printout 
     n_zero_genes = (tpm.sum(axis=1) == 0).sum()
     missing_pct = tpm.isna().mean().mean() * 100
     print(f"\nFinal TPM matrix: {tpm.shape[0]} genes x {tpm.shape[1]} samples")
     print(f"Genes with zero expression across all samples: {n_zero_genes}")
     print(f"Missing values: {missing_pct:.2f}%")
 
-    # 7. Write csv
+    # Write csv
     tpm.reset_index().to_csv(OUTPUT_FILE, sep="\t", index=False)
     print(f"\nWrote {OUTPUT_FILE}")
 
-    # 8. Make histogram & calculate distribution of TPM vals
+    # Make histogram & calculate distribution of TPM vals
     tpm_values = tpm.values.flatten()
 
     median_tpm = pd.Series(tpm_values).median()

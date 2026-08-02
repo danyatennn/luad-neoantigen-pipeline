@@ -3,19 +3,13 @@ Part 12.1 - Peptide-MHC Binding Prediction: Class I, 9-mers (MHCflurry)
 Loads the 9-mer peptides from Part 10, checks mutant/wild-type pairing
 integrity, scores every peptide against the fixed Class I HLA panel
 from Part 11 using MHCflurry, and computes the mutant-vs-wildtype
-binding delta to flag candidate neoantigens.
-
-Install requirements:
-    pip install mhcflurry --break-system-packages
-    mhcflurry-downloads fetch models_class1_presentation
-
+binding delta to flag candidate neoantigens
 """
 
 import pandas as pd
 from mhcflurry import Class1AffinityPredictor
 import mhcflurry
 from tqdm import tqdm
-
 import config
 
 PEPTIDE_FILE = config.PEPTIDES  # Part 10 output

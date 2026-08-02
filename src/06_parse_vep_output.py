@@ -10,11 +10,10 @@ vep = pd.read_csv(config.VEP_OUTPUT, sep="\t")
 before = len(vep)
 vep = vep[vep["MANE"] == "MANE_Select"]
 
-# Keep missense only (main analysis scope defined in the task).
+# Keep missense only
 vep = vep[vep["Consequence"].str.contains("missense_variant")]
 print(f"Kept {len(vep)} of {before} variants (MANE Select + missense).")
 
-# Keep and rename only the fields required by task 9.
 annot = pd.DataFrame({
     "Reference_Assembly": "GRCh38",
     "Gene_Symbol": vep["SYMBOL"],
