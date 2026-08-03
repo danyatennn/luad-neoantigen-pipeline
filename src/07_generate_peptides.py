@@ -11,7 +11,7 @@ AA3 = {
     "Pro":"P","Ser":"S","Thr":"T","Trp":"W","Tyr":"Y","Val":"V",
 }
 
-# Load Ensembl human proteome (release 116, matches VEP cache).
+# Load Ensembl human proteome (release 116).
 # Index by unversioned ENSP (e.g. ENSP00000493376).
 proteins = {}
 with gzip.open(config.PROTEOME, "rt") as fh:
