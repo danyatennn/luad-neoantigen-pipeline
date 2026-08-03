@@ -163,7 +163,7 @@ print(f"\nWrote {config.NEOANTIGEN_TABLE}")
 
 # Stronger literature-based filtering & ranking
 
-EXPR_TPM_MIN = 3034 # expression fallback threshold (RNA read-depth arm not applicable here)
+EXPR_TPM_MIN = 30 # expression fallback threshold (RNA read-depth arm not applicable here)
 IC50_STRONG_MAX = 50.0 # nM, Teku & Vihinen 2018
 IC50_WEAK_MAX = 500.0 # nM, Teku & Vihinen 2018
 PRIME_RANK_MAX = 0.5 # PRIME %Rank, Schmidt et al. 2021
