@@ -160,3 +160,47 @@ print(final_table.head(5).to_string(index=False))
 
 final_table.to_csv(config.NEOANTIGEN_TABLE, sep="\t", index=False, na_rep="NA")
 print(f"\nWrote {config.NEOANTIGEN_TABLE}")
+
+# Stronger literature-based filtering & ranking
+
+EXPR_TPM_MIN = 3034 # expression fallback threshold (RNA read-depth arm not applicable here)
+IC50_STRONG_MAX = 50.0 # nM, Teku & Vihinen 2018
+IC50_WEAK_MAX = 500.0 # nM, Teku & Vihinen 2018
+PRIME_RANK_MAX = 0.5 # PRIME %Rank, Schmidt et al. 2021
+TOP_N  = 20
+
+final_table["BindingAffinity"]  = pd.to_numeric(final_table["BindingAffinity"], errors="coerce")
+final_table["BindingRank"] = pd.to_numeric(final_table["BindingRank"], errors="coerce")
+final_table["ImmunogenicityScore"] = pd.to_numeric(final_table["ImmunogenicityScore"], errors="coerce")
+final_table["GeneLevelTPM"] = pd.to_numeric(final_table["GeneLevelTPM"], errors="coerce")
+
+is_class1 = final_table["PeptideLength"] == 9
+is_class2 = final_table["PeptideLength"] == 15
+
+expressed = final_table["GeneLevelTPM"] >= EXPR_TPM_MIN
+strong_binder = final_table["BindingAffinity"] < IC50_WEAK_MAX # Class I only — NA for Class II fails safely
+# PRIME wasn't run for Class II, so don't let a real NA there disqualify 15-mers
+immunogenic_ok = (final_table["ImmunogenicityScore"] <= PRIME_RANK_MAX) | is_class2
+
+hard_filtered = final_table[
+    expressed
+    & (strong_binder | is_class2) # IC50 filter is Class-I-only
+    & immunogenic_ok
+].copy()
+
+print(f"{len(final_table)} rows -> {len(hard_filtered)} pass hard literature filters "
+      f"(expression >= {EXPR_TPM_MIN} TPM, IC50 < {IC50_WEAK_MAX} nM for Class I, "
+      f"PRIME rank <= {PRIME_RANK_MAX} for Class I)")
+
+# Tiered ranking: high-affinity binders first, then by immunogenicity, then by raw affinity
+hard_filtered["HighAffinityTier"] = (hard_filtered["BindingAffinity"] < IC50_STRONG_MAX).fillna(False).astype(int)
+
+ranked = hard_filtered.sort_values(
+    by=["HighAffinityTier", "ImmunogenicityScore", "BindingAffinity"],
+    ascending=[False, True, True],
+    na_position="last",
+)
+
+top_candidates = ranked.head(TOP_N)
+top_candidates.to_csv(config.TOP_CANDIDATES, sep="\t", index=False, na_rep="NA")
+print(f"Wrote top {len(top_candidates)} candidates to {config.TOP_CANDIDATES}")

@@ -58,6 +58,8 @@ IMMUNOGENICITY = INTERIM / "part13_immunogenicity_results.tsv"
 WT_VS_MUTANT = INTERIM / "wt_vs_mutant_scored.tsv"
 CANDIDATES_SCORE_6 = INTERIM / "candidates_prioritisation_score_6.tsv"
 
+TOP_CANDIDATES = INTERIM / "top20_priority_neoantigens.tsv"
+
 
 # figures
 FIG_TPM_HISTOGRAM = FIGURES / "tpm_distribution_log.png"
