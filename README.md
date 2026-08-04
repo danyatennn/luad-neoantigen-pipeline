@@ -14,6 +14,7 @@
 |---|---|
 | Project ID | **TCGA-LUAD** (Lung Adenocarcinoma) |
 | Program | The Cancer Genome Atlas (TCGA) |
+| dbGaP Study Accession | phs000178 |
 | Portal | https://portal.gdc.cancer.gov/ |
 | Access date | 20 July 2026, 11:17 |
 | Data Category | Simple Nucleotide Variation |
